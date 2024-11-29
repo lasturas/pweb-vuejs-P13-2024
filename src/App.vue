@@ -1,85 +1,123 @@
-<script setup lang="ts">
-import { RouterLink, RouterView } from 'vue-router'
-import HelloWorld from './components/HelloWorld.vue'
-</script>
-
 <template>
-  <header>
-    <img alt="Vue logo" class="logo" src="@/assets/logo.svg" width="125" height="125" />
+  <div class="min-h-screen bg-gray-100 p-8">
+    <div class="container mx-auto">
+      <h1 class="text-2xl font-bold mb-6">Manajemen Buku</h1>
 
-    <div class="wrapper">
-      <HelloWorld msg="You did it!" />
+      <!-- Menampilkan form untuk menambah dan mengedit buku -->
+      <BookForm
+        :form="form"
+        :editIndex="editIndex"
+        :saveBook="saveBook"
+      />
 
-      <nav>
-        <RouterLink to="/">Home</RouterLink>
-        <RouterLink to="/about">About</RouterLink>
-      </nav>
+      <!-- Menampilkan daftar buku -->
+      <BookList
+        :books="books"
+        :editBook="editBook"
+        :deleteBook="deleteBook"
+        :onClickBook="openBookDetail"
+      />
+
+      <!-- Modal Detail Buku untuk Peminjaman dan Pengembalian -->
+      <BookBorrow
+        :showModal="showDetailModal"
+        :book="currentBook"
+        :closeModal="closeBookDetail"
+        :updateBookList="updateBookList"
+      />
     </div>
-  </header>
-
-  <RouterView />
+  </div>
 </template>
 
-<style scoped>
-header {
-  line-height: 1.5;
-  max-height: 100vh;
-}
+<script>
+import { ref } from "vue";
+import BookList from "./components/BookList.vue";
+import BookForm from "./components/BookForm.vue";
+import BookBorrow from "./components/BookBorrow.vue";
 
-.logo {
-  display: block;
-  margin: 0 auto 2rem;
-}
+export default {
+  components: { BookList, BookForm, BookBorrow },
+  setup() {
+    const books = ref([
+      { judul: "Vue.js untuk Pemula", pengarang: "John Doe", tahun: "2022", jumlah: 5, pinjam: 0 },
+      { judul: "Mastering JavaScript", pengarang: "Jane Smith", tahun: "2020", jumlah: 3, pinjam: 0 },
+    ]);
 
-nav {
-  width: 100%;
-  font-size: 12px;
-  text-align: center;
-  margin-top: 2rem;
-}
+    const form = ref({
+      judul: "",
+      pengarang: "",
+      tahun: "",
+      jumlah: "",
+    });
 
-nav a.router-link-exact-active {
-  color: var(--color-text);
-}
+    const editIndex = ref(null);
+    const currentBook = ref(null);
+    const showDetailModal = ref(false);
 
-nav a.router-link-exact-active:hover {
-  background-color: transparent;
-}
+    // Fungsi untuk menyimpan buku baru atau perubahan buku
+    const saveBook = () => {
+      if (editIndex.value !== null) {
+        books.value[editIndex.value] = { ...form.value };
+        editIndex.value = null;
+      } else {
+        books.value.push({ ...form.value });
+      }
+      resetForm();
+    };
 
-nav a {
-  display: inline-block;
-  padding: 0 1rem;
-  border-left: 1px solid var(--color-border);
-}
+    // Fungsi untuk mengedit buku
+    const editBook = (index) => {
+      editIndex.value = index;
+      form.value = { ...books.value[index] };
+    };
 
-nav a:first-of-type {
-  border: 0;
-}
+    // Fungsi untuk menghapus buku
+    const deleteBook = (index) => {
+      books.value.splice(index, 1);
+    };
 
-@media (min-width: 1024px) {
-  header {
-    display: flex;
-    place-items: center;
-    padding-right: calc(var(--section-gap) / 2);
-  }
+    // Fungsi untuk membuka detail buku
+    const openBookDetail = (book) => {
+      currentBook.value = book;
+      showDetailModal.value = true;
+    };
 
-  .logo {
-    margin: 0 2rem 0 0;
-  }
+    // Fungsi untuk menutup modal detail buku
+    const closeBookDetail = () => {
+      showDetailModal.value = false;
+    };
 
-  header .wrapper {
-    display: flex;
-    place-items: flex-start;
-    flex-wrap: wrap;
-  }
+    // Fungsi untuk memperbarui daftar buku
+    const updateBookList = (updatedBook) => {
+      const index = books.value.findIndex((book) => book.judul === updatedBook.judul);
+      if (index !== -1) {
+        books.value[index] = { ...updatedBook };
+      }
+    };
 
-  nav {
-    text-align: left;
-    margin-left: -1rem;
-    font-size: 1rem;
+    // Fungsi untuk mengatur ulang formulir setelah menyimpan buku
+    const resetForm = () => {
+      form.value = {
+        judul: "",
+        pengarang: "",
+        tahun: "",
+        jumlah: "",
+      };
+    };
 
-    padding: 1rem 0;
-    margin-top: 1rem;
-  }
-}
-</style>
+    return {
+      books,
+      form,
+      editIndex,
+      saveBook,
+      editBook,
+      deleteBook,
+      openBookDetail,
+      closeBookDetail,
+      showDetailModal,
+      currentBook,
+      updateBookList,
+    };
+  },
+};
+</script>
